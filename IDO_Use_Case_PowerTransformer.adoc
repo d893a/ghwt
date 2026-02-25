@@ -11,8 +11,8 @@
 ifdef::backend-html5[]
 ++++
 <style>
-.sect1, .sect2, .sect3, p {
-  text-align: justify;
+  .sect1, .sect2, .sect3, p {
+    text-align: justify;
 }
 </style>
 ++++
