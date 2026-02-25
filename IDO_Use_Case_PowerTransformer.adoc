@@ -1,0 +1,734 @@
+= Power Transformer Case Study
+:sectnums:
+:imagesdir: IDO_Use_Cases.media
+//:figure-caption: Figure
+:xrefstyle: short
+// https://docs.asciidoctor.org/asciidoc/latest/sections/id-prefix-and-separator/
+:idprefix: sec-
+:idseparator: -
+:text-align: justify
+
+ifndef::backend-pdf[]
+++++
+<style>
+.sect1, .sect2, .sect3, p {
+  text-align: justify;
+}
+</style>
+++++
+endif::[]
+
+
+This case study mainly illustrates the Property Classes Pattern. Information on other patterns is included in the case study, but is not a focus. It shows why different Property Types are needed and how they attach to the correct Bearers across the lifecycle of a High Voltage Power Transformer (referred to as a power transformer in this study). It uses the power transformer as a running example to distinguish between properties of different bearers. Hint: An instance of a property cannot "live" without is bearing instance e.g. the instance 380 kV of rate voltage cannot exist without the bearer which is an instance of a power transformer identified by the property serial number which as well cannot exit without the instance of the power transformer. Examples of bearers in this case study are --
+
+* physical objects,
+* activities performed by those objects,
+* events in the lifecycle of those objects,
+* organizations which contribute to the lifecycle of those objects,
+* locations where those objects will be materialized during the lifecycle,
+* documents attached or related to those objects,
+* financial objects as connection to the accounting of the participating organization.
+
+NOTE: Function is not mentioned here because it is like a property -- a dependent class, which needs a bearer -- and a function cannot have properties which is defined like this in the IDO.
+
+Furthermore, it also demonstrates how `Required`, `Rated`, `Nominal`, `Measured` and `Calculated` (properties that are derived from other properties) values coexist, how geographical information (e.g. `Country of Installation`) is modelled using governed Reference Properties, and how external code systems such as ISO 3166-1 "Codes for the representation of names of countries and their subdivisions - Part 1: Country code" are incorporated using Classification Properties. The case study is designed to feed xref:IDO_Pattern_PropertyClasses#sec-competency-questions[Competency Questions].
+//(see Chapter link:IDO_Pattern_PropertyClasses.adoc#pattern-specific-motivation-and-examples[3.2]).
+
+== Visual Overview -- From Core to Operational Transformer
+
+To provide a clear visual foundation for the Power Transformer case study, the following figures illustrate the physical object across its lifecycle — from the first assembly steps of the magnetic core, through winding production, installation and operation, to dismantling and recycling. These images help readers connect the physical features of a transformer with the different property types (`Quality`, `Reference`, `Classification`, etc.) discussed later in this case study. They are not part of the ontology itself, but serve as a visual anchor for the semantics developed in the following chapters.
+
+=== Magnetic core assembly
+
+Stacking of laminated steel sheets to form the magnetic core of a three-phase power transformer is shown in xref:fig-power-transformer-winding[]. The core limbs will later carry the windings and provide the magnetic path that links the three phase systems.
+
+//.Stacking of laminated steel sheets to form the magnetic core of a three-phase power transformer
+[#fig-power-transformer-winding, title="Stacking of laminated steel sheets to form the magnetic core of a three-phase power transformer. Author: Fluppe37. Public Domain, CC BY-SA 3.0 via Wikimedia Commons",link=https://commons.wikimedia.org/wiki/File:Kern_722.jpg]
+image::PowerTransformer_Winding_TapChanger.jpg[]
+
+This view shows the beginning of the Power Transformer's physical lifecycle. The three horizontally positioned core limbs, each carrying one phase of the high- and low-voltage windings, form the magnetic structure that will later determine the Rated Power and Rated Voltage of the Power Transformer.
+
+=== Winding assembly on the magnetic core
+
+xref:fig-magnetic-core-winding-assembly[] shows the copper windings being mounted on the core limbs. The conductors and layer insulation are visible. The transformer is a fluid-insulated type, designed for oil-based insulation and cooling.
+
+[#fig-magnetic-core-winding-assembly, title="Winding assembly on the magnetic core. Author: Kklemenn. GNU Free Documentation License, version 1.2 or later",link=https://commons.wikimedia.org/wiki/File:Izgradnja_240_MWA_transformatorja_narejenega_v_Sloveniji.jpg]
+image::PowerTransformer_CoreAssembly.jpg[]
+
+At this stage, the windings are being assembled and insulated around the core. The visible tap-changer leads connect to tapped sections that will later allow regulation of the output voltage. Here, physical `Quality Properties` such as __Rated Voltage__, __Rated Power__ and __Cooling Method__ begin to take form as intrinsic, design-defined characteristics of the manufactured transformer.
+
+=== An installed power transformer in operation
+
+xref:fig-power-transformer-installed[] illustrates an installed step-down transformer (approx. 400 MVA, 380 / 110 kV) at the EnBW Großgartach substation in Germany. The unit shows high- and low-voltage bushings, a neutral terminal, cooling radiators, and an oil conservator tank for thermal compensation.
+
+[#fig-power-transformer-installed, title="Installed 380 / 110 kV power transformer in operation. Circa 400 MVA. Author: Zonk43. Creative Commons Attribution-ShareAlike 4.0 International", link=https://commons.wikimedia.org/wiki/File:Enbw_Umspannwerk_Grossgartach_380kV_Transformator_03082016_1.JPG]
+image::PowerTransformer_Installed.jpg[]
+
+The fully assembled and oil-cooled transformer is shown in a ready-for-service state (it is not energized, as the grounding switch is closed). The bushings, cooling system and oil conservator demonstrate how mechanical and insulation features support electrical operation. This image corresponds to the operational phase in which `Nominal` and `Measured` Properties become relevant while the `Rated` Properties from design remain the capability limits of the asset.
+
+=== Transformer end-of-life dismantling
+
+xref:fig-power-transformer-dismantling[] depicts a power transformer being dismantled during end-of-life processing. With the tank removed, the copper windings and insulation structure are exposed, showing the internal active parts before material separation and recycling. Visually, the same appearance can occur during manufacturing or major refurbishment, when the active part is assembled or re-insulated.
+
+[#fig-power-transformer-dismantling, title="Transformer internal structure during end-of-life dismantling. Author: Faruku. Released into the public domain by the copyright holder", link=https://commons.wikimedia.org/wiki/File:Leistungstrafo_Wicklungen.jpg]
+image::PowerTransformer_Dismantling.jpg[]
+
+This image illustrates the physical end-of-life phase of a power transformer, when the active part is dismantled for inspection or recycling. This stage is not explicitly modelled in this case study; it is shown here only to complete the visual representation of the transformer's full physical lifecycle. No new properties are introduced or referenced for this phase — the image merely provides a realistic impression of how the same internal structure reappears when the transformer is disassembled at the end of service or during major refurbishment.
+
+[#lifecycle-context-and-narrative]
+== Lifecycle Context and Narrative
+
+This section explains, phase by phase, how properties arise, how they change, and which entity (`Bearer`) legitimately "has" which property in each stage, from planning to operation. The scenario is international by design: the Power Transformer is manufactured in Austria, installed in Germany, owned and operated by a Japanese utility, and remotely monitored by an operations service team based in Brazil. This produces cross-border dependencies: technical requirements, legal and jurisdictional obligations, logistics and customs, and operational responsibilities cannot be treated in isolation. The story also follows the modelling distinction between the different bearers mentioned in the previous chapter.
+
+=== Design and Specification Phase
+
+A new high-voltage substation is being built in Germany. Its purpose is to hand over electrical power from the 380 kV transmission grid into the 110 kV regional high-voltage network. This substation is part of a broader grid expansion program, needed to transport renewable energy inland and redistribute it across industrial and urban areas. The central component of the new substation is a step-down Power Transformer. It converts 380 kV from the transmission side to 110 kV on the regional side. The Power Transformer will become a registered asset and a key element of the national grid.
+
+A transmission system operator is procuring this large three-phase Power Transformer for grid integration of a new wind park. Both engineering teams (at Owner/Operator, EPC and manufacturer) and ontology engineers must describe this power transformer in a way that is precise, machine-interpretable, and compliant with IEC 60076-1.
+
+The system engineering team (ideally at the Owner/Operator side or at the EPC side) breaks down the overall requirement to transport electrical renewable energy from the producing wind park to the consumers. This includes the activity to transform the energy from the 380 kV transmission grid voltage to the 110 kV regional grid voltage. They specify the Nominal Power (380 MVA) and the Nominal Voltage levels (input: 380 kV / output: 110 kV). These are the values which should be fulfilled during operation. This is not yet a statement about the manufactured transformer as an object. It is a statement about the intended power-transfer activity in the system context.
+
+The substation operates within a three-phase AC transmission network, as is typical for high-voltage power systems. From the perspective of the Owner/Operator, the key concern is to ensure that electrical energy can be transferred reliably between the transmission network (380 kV) and the regional high-voltage network (110 kV) without creating unwanted phase conflicts in the grid. For this reason, the Owner/Operator defines the required phase displacement between the primary and secondary systems as part of the system-level design requirements.
+
+This requirement belongs to the Power Transfer Activity — it expresses how the voltages on the two network sides must be phase-aligned for proper synchronization and parallel operation with other transformers in the grid. In practical terms, this requirement is often stated as required phase shift and its phase displacement direction (leading or lagging, hint: the meaning will be explained in the next chapter), for example 30° lagging between the primary and secondary system voltages. The equipment engineer or manufacturer must interpret this activity-level requirement and derive from it the corresponding device-level properties of the transformer (such as winding connections and vector-group configuration) that realize the required phase relationship in practice (details see next chapter).
+
+By formulating the requirement at the level of the Power Transfer Activity and deriving the physical implementation only later, the ontology can maintain a clear semantic distinction between what the system demands and how the equipment fulfils that demand. The equipment design team derives the specifications for the Power Transformer Specification from the given Power Transfer Activity. They specify the Specified Power (400 MVA, the engineer know that the specified power must be higher than the nominal power to have some buffer, hint: this rule should be considered in the ontology) and the Specified Voltage levels (380 kV / 110 kV). They choose a Cooling Method, Insulation Class, and Delivery Date. These are Specified Properties, defined in the design and procurement phase. They belong to the Purchase Order Item (Delivery Date, see chapter 11.2 for details) and the Requirement Specification of the Power Transformer Specification (Specified Power, Specified Voltage, Cooling Method, Insulation Class), not to the Physical Power Transformer.
+
+==== Ontology requirement at this stage
+
+*Bearers identified*
+
+* Power Transfer Activity -- the operational activity representing energy transfer between voltage levels;
+* Power Transformer Specification -- the collection of the specified properties (was in the past a specification document, with additional structure information it would be possible to generate a document out of the specified properties);
+* Purchase Order -- the contractual artefact linking commercial and technical requirements.
+
+*Property assignment*
+
+* Nominal properties (e.g. Nominal Power, Nominal Voltage) are assigned to the Bearer Power Transfer Activity;
+* Configuration properties (e.g. Required Phase shift, Phase Displacement Direction, Voltage Conversion Role) are assigned to the Bearer Power Transfer Activity too;
+* Specified properties (e.g. Specified Power, Specified Voltage, Cooling Method, Insulation Class) are assigned to the Bearer Power Transformer Specification;
+* Details about `Delivery Date` and how it is assigned to the Bearer `Purchase order` is defined in <<Procurement and Logistics>>.
+
+NOTE: All these properties, including Delivery Date, are qualifying the bearer.
+
+*Rules identified*
+
+These make knowledge explicit -- which is implicit in the Power Transformer story.
+
+* Nominal Power and Nominal Voltage describe intended system behaviour, not device capability.
+* Specified Power ≥ Nominal Power (as engineering margin).
+* Voltage Conversion Role is step-up if the voltage of the incoming electrical energy is lower than that of the outgoing electrical energy, and step-down if it is the opposite (as defined in IEC 60076-8). It describes the functional role of the power-transfer activity within the electrical grid.
+
+*Notes*
+
+* These properties belong to the requirement level; rated and measured values appear only after design and testing.
+* Quantitative details such as value {plus} unit (MVA, kV, A) or lists of values (e.g., lagging, leading or 0°, 30°, 60° ... 330°) are treated in Pattern P2 or P5, not within the Property Classes Pattern.
+* The teams mentioned (e.g., Owner/Operator, System Engineering, Procurement) represent organizational bearers rather than technical ones. Their ontology requirements is addressed separately in <<Organisational and Project Context>>.
+
+=== Manufacturing Phase
+
+After procurement, the selected Manufacturer takes responsibility for the detailed design and production of the Power Transformer. Within the manufacturer's organization, the Engineering Team defines the rated design data in accordance with IEC 60076-1, while the Manufacturing Team fabricates the physical asset according to these design definitions. The Power Transformer is a physical asset that embodies its Rated Power and Rated Voltage — two fundamental design properties that describe its capability under standard operating conditions. These rated values are established by the Engineering Team during the design stage to ensure the transformer can operate continuously within the prescribed thermal and electrical limits defined by the standard.
+
+==== Rated Properties
+
+The `Power Transformer` is a physical asset that embodies its `Rated Power` and `Rated Voltage` — two fundamental design properties that describe its capability under standard operating conditions. These rated values are established by the Engineering Team during the design stage to ensure the transformer can operate continuously within the prescribed thermal and electrical limits defined by the standard.
+
+`Rated Power` represents the continuous apparent power output the transformer can deliver under rated voltage, frequency, and cooling conditions. It is defined in design, verified once for the transformer type through the Temperature Rise Type Test on a representative prototype, and then applied to all assets of the same type. In practice, the Engineering Team typically defines the Rated Power slightly higher than the Specified Power defined during procurement — for example, a transformer specified at 400 MVA may receive a Rated Power of 410 MVA — to provide operational margin for thermal and load variations.
+
+`Rated Voltage` defines the nominal voltage per winding that produces the rated voltage at the terminals of the other windings under open-circuit conditions. It, too, is fixed in the design and remains constant for all manufactured transformers of that type. During the design process at the Manufacturer, the Engineering Team defines the internal structure of the Power Transformer.
+
+The `Power Transformer` comprises multiple windings, each being a physical sub-entity of the power transformer. Each winding is assigned its own Rated Voltage and Rated Current. Together, these properties describe the electrical behaviour of that winding in the overall power transformer configuration. Typical designs include a high-voltage (HV) winding (winding which has a higher Rated Voltage than the other winding) and a low-voltage (LV) winding (winding which has a lover Rated Voltage than the other winding), possibly with one or more intermediate windings for regulating or tertiary functions. The resulting set of windings defines how electrical energy is transferred between voltage levels in operation.
+
+===== Ontology requirement at this stage
+
+*Bearers identified*
+
+* Power Transformer Specification - defines the rated electrical design properties; its values will be verified by type tests;
+* Power Transformer Type -- prototype of a new power transformer series to verify the values defined in the specification and in IEC 60076; its type test protocol can be referenced by all Physical Power Transformers of the series the Power Transformer Type is built for
+* Physical Power Transformer -- instantiates the type and is produced under the same rated conditions;
+* Winding -- a physical sub-component (or in other words: a physical part) of the Power Transformer Type or the Physical Power Transformer.
+
+*Property assignment*
+
+* Qualifying properties: rated properties (e.g. Rated Power, Rated Voltage, Rated Current) and are assigned to the Bearers like Transformer Type or the part Winding;
+* The measured results that verify the rated properties are documented in the different Test Protocols (type test or factory acceptance test), which will later be associated with the manufactured power transformer via its Serial Number (see Chapter 11.1.2.5)
+
+*Rules identified*
+
+These make knowledge explicit which is implicit in the Power Transformer story:
+
+* Rated Power >= Specified Power > Nominal Power.
+* Rated properties must comply with IEC 60076-1 limits for thermal and electrical stress.
+* Rated and measured properties during the different test are related to each other.
+* The winding with the higher Rated Voltage is named HV and the winding with the lower Rated Voltage is named LV.
+* The part of relation between Physical Power Transformer and Winding must be at least 2 (if it would be only 1 then it is a Shunt Reactor and not a Power Transformer)
+* The part of relation between Winding and Physical Power Transformer must be exactly 1, because a winding cannot exist independently of a power transformer. Each winding instance is therefore a mandatory and uniquely associated part of exactly one power transformer instance.
+
+*Notes*
+
+* Quantitative details such as value {plus} unit (MVA, kV, A) are treated in Pattern P2, not within the Property Classes Pattern.
+* The teams mentioned (e.g., Engineering team) represent organizational bearers rather than technical ones. Their ontology requirements is addressed separately in <<Organisational and Project Context>>.
+
+====  Winding design - From System Requirement to Device Design
+
+Based on the required Phase Shift and Phase Displacement Direction defined by the Owner/Operator or System Engineering during the design and specification phase, the Engineering Team at the Manufacturer (or, in some cases, the Equipment Engineering Team at the EPC) determines how this requirement can be realised inside the transformer. To achieve the configured phase relationship between the primary and secondary windings, the engineers define the internal connection scheme of the transformer windings according to IEC 60076-1. These design decisions transform the requirement defined for the Power Transfer Activity into concrete device-level properties.
+
+The Engineering Team translates the required Phase Shift and Phase Displacement Direction — for example, 30° lagging between the primary and secondary system voltages — into the corresponding Phase Displacement Group of the respective winding, following the standardised “clock notation” principle of IEC 60076-1 § 7.1.2. Each 30° of Phase Shift corresponds to one “hour” on the vector-group clock face. The phase displacement direction defines whether the hour numbering is counted clockwise (leading) or counter-clockwise (lagging) from the 12 o'clock reference position. This interpretation marks the point where the activity-level requirement from the Owner/Operator is converted into a device-level design intent that will later be expressed through the power transformer's connection designation.
+
+===== Ontology requirement at this stage
+
+*Bearers identified*
+
+* Power Transfer Activity -- provides the requirements which are relevant for the Power Transformer Specification;
+* Power Transformer Specification -- the collection of the specified properties (was in the past a specification document, with additional structure information it would be possible to generate a document out of the specified properties);
+
+*Property assignment*
+
+* configuration properties (e.g., Specified Phase Displacement Group) are assigned to the Bearer Power Transformer Specification.
+
+NOTE: All these properties are qualifying the bearer.
+
+*Rules identified*
+
+* Phase Displacement Group must correspond to the required Phase shift and Phase Displacement Direction defined in the Power Transfer Activity;
+* Each 30° of phase shift equals one clock hour in IEC 60076-1 notation.
+* The phase displacement direction defines whether the hour numbering is counted clockwise or counter-clockwise
+
+*Notes*
+
+* Quantitative details such as value {plus} unit (°) or lists of values (lead, lag or 0, 1, 2 ... 11) are treated in Pattern P2 or P5, not within the Property Classes Pattern.
+* The teams mentioned (e.g., System or Equipment Engineering team at the EPC, Engineering Team at Manufacturer) represent organizational bearers rather than technical ones. Their ontology requirements is addressed separately in <<Organisational and Project Context>>.
+
+==== Three-Phase Construction and Connection Types
+
+To realise this design property physically, the Engineering Team defines how the transformer windings must be arranged. The Power Transformer is therefore constructed as a three-phase transformer, in which each of its windings — high-voltage, low-voltage, and, if applicable, intermediate — consists of three single-phase windings, one for each phase of the electrical system. The way these three phase windings are interconnected determines how voltage and current are distributed across the phases and how the transformer interacts with the surrounding grid. The possible interconnections are called connection types, as defined in IEC 60076-1 § 7.1.1. Each connection type has distinct electrical characteristics and implications for insulation, grounding, and system compatibility:
+
+* Star (Y) — the three phase windings are connected to a common point, forming a neutral.
+* This arrangement allows the use of phase-to-neutral voltages and provides grounding possibilities.
+* Delta (D) — the three windings are connected end-to-end in a closed loop.
+* There is no neutral point, and phase-to-phase voltages dominate the behaviour.
+* Zigzag (Z) — a more complex connection providing phase balancing and specific grounding features.
+* Auto (A) — a configuration where sections of windings are shared between voltage levels.
+* Open (III) — a special form used in open-winding arrangements.
+
+If a winding is connected in Star (Y), the designer must additionally decide whether the neutral point is brought out to an external terminal. This property, called Neutral Brought Out, is only relevant for star-connected windings. Providing an accessible neutral enables grounding and auxiliary single-phase supplies, but it also affects insulation levels and test requirements.
+
+===== Ontology requirement at this stage
+
+*Bearers identified*
+
+* Power Transformer Specification - defined as three-phase asset ;
+* Winding Specification - have different connection types and could have Neutral Brought Out.
+
+*Property assignment*
+
+* Configuration properties (e.g. Specified Connection Type, Specified Neutral Brought Out) are assigned to the Bearer Winding Specification.
+* Configuration properties (e.g. Specified Number of phases, Specified Winding Voltage Order) are assigned to the Bearer Power Transformer Specification.
+
+NOTE: All these properties are qualifying the bearer.
+
+*Rules identified*
+
+* If Connection Type = Star (Y), then Neutral Brought Out may be true or false;
+* If Connection Type ≠ Star, then Neutral Brought Out = false;
+* Symbols for windings must appear in descending order of Rated Voltage (IEC 60076-1 § 7.1.1).
+
+*Notes*
+
+* Quantitative details such as boolean (e.g., Neutral Brought Out) or (lists of values (e.g., Y, D, Z, A, III) are treated in Pattern P2 or P5, not within the Property Classes Pattern.
+* The teams mentioned (e.g., Engineering team) represent organizational bearers rather than technical ones. Their ontology requirements is addressed separately in <<Organisational and Project Context>>.
+
+==== Phase Displacement and Connection Designation
+
+After the winding interconnections have been defined, the overall electrical configuration of the transformer can be expressed as its *Connection Designation*, often referred to as the *vector-group code* (e.g. _Dyn11_, _Yy0_), as defined in IEC 60076-1 § 7.1.2. This designation is not a single textual label but a *derived composite property* that encodes the key configuration features of the transformer:
+
+* the *Connection Type* of each winding (Star, Delta, Zigzag, etc.);
+* whether a *Neutral* is brought out for the respective star-connected winding;
+* the *Phase Displacement Group* between the high-voltage and lower-voltage windings (expressed by the “clock number”); and
+* the *Winding Voltage Order*, which defines the sequence of windings by decreasing Rated Voltage.
+
+Each 30° of phase shift corresponds to one “hour” on the vector-group clock face.
+
+The *Phase Displacement Direction* determines whether the numbering of these hours is counted clockwise (_leading_) or counter-clockwise (_lagging_) from the 12 o'clock reference position, where the high-voltage winding is taken as the reference. For example, in the designation _Dyn11_, the “11” indicates that the low-voltage phase leads the high-voltage phase by 330°, equivalent to a 30° lagging displacement, as specified in the system requirement. IEC 60076-1 also requires that the symbols representing the individual windings appear in descending order of their Rated Voltages. This ensures that the Connection Designation remains consistent and unambiguous across manufacturers and projects.
+
+In semantic terms, the *Connection Designation* is therefore a derived property — the result of combining explicitly modelled primitive configuration properties. It should not be treated as the single authoritative value in the ontology; instead, its component properties (Connection Type, Neutral Brought Out, Phase Displacement Group, Winding Voltage Order) must be represented individually, allowing the designation to be computed or serialized as needed.
+
+===== Ontology requirement at this stage
+
+*Bearers identified*
+
+* Winding Specification -- defines the Connection Type and whether Neutral is Brought Out;
+* Power Transformer Specification -- aggregates the phase-related configuration (Phase Displacement Group, Winding Voltage Order) and derives the overall Connection Designation.
+
+*Property assignment*
+
+* Configuration properties (e.g. _Connection Type_, _Neutral Brought Out_) are assigned to the Winding Specification
+* Configuration properties (e.g. _Phase Displacement Group_, _Winding Voltage Order_) are assigned to the Power Transformer Specification
+* Derived configuration property (_Connection Designation_) are assigned to the Power Transformer Specification _(functionally derived from the above primitive configuration properties)_
+
+NOTE: All these properties are qualifying the bearer.
+
+*Rules identified*
+
+* If __Connection Type__ = Star (Y), __Neutral Brought Out__ may = true or false.
+* If __Connection Type__ ≠ Star, __Neutral Brought Out__ = false.
+* __Phase Displacement Group__ must correspond to the required _Phase Shift_ and _Phase Displacement Direction_ defined in the Power Transfer Activity.
+* _Symbols for windings_ must appear in descending order of _Rated Voltage_ (IEC 60076-1 § 7.1.1).
+* _Connection Designation_ is a derived serialization and must remain consistent with its component configuration properties.
+
+*Notes*
+
+* The Connection Designation (e.g. _Dyn11_) acts as the standardized shorthand but is semantically derived.
+* Boolean and enumerated configuration values (e.g. Neutral Brought Out, Connection Type) are handled through controlled vocabularies and represented as categorical properties (see Patterns P2 and P5).
+* Organizational roles (Engineering Team, Equipment Design Team, Manufacturer) are not modelled here; they are addressed in <<Organisational and Project Context>>.
+
+==== Identification and Classification
+
+Once the power transformer has been manufactured according to its released design, the *Manufacturing Team* assigns a *Serial Number*. This Serial Number is an _identifying property_ that uniquely refers to the specific physical transformer and enables traceability throughout its lifecycle — from testing and logistics to operation and decommissioning.
+
+NOTE: The Serial Number becomes mandatory at the latest when preparing the data set for the transformer's nameplate.
+
+To achieve global uniqueness, additional context such as the manufacturer's identifier and year of manufacture can be combined with the Serial Number, since no global authority assigns unique transformer identifiers. The Serial Number also provides the formal *traceability link to the transformer's Test Protocols*. Each Test Protocol documents the measured values obtained during testing, and this one-to-one association ensures that every set of test results can be unambiguously traced to the corresponding physical asset.
+
+In general, *Type Test Protocols* and *Factory Acceptance (Routine) Test Protocols* refer to different transformers and therefore to different Serial Numbers. The Type Test Protocol validates the design of a transformer type on a representative unit, whereas the Factory Acceptance Test confirms compliance of each individually manufactured transformer prior to delivery.An exception occurs when the first manufactured transformer of a new type serves both as the representative unit for type testing and as the first asset delivered to a customer; in this case, both protocols share the same Serial Number. In parallel to identification, the finished unit is also classified according to standardized product taxonomies.
+
+Two design properties — *Rated Power* and *Insulation Type* — determine the correct external class assignment in *ECLASS*. ECLASS (release 15.0) defines the following relevant transformer classes:
+
+[width="100%",cols="20%,23%,17%,40%",options="header",]
+|===
+|Insulation Type |Rated Power Range |ECLASS Code |Preferred Class Name
+|Fluid |++>++ 100 MVA |27-03-12-01 |Transformer (oil cooled ++>++ 100 MVA)
+|Fluid |10 -- 100 MVA |27-03-12-02 |Transformer (oil cooled, 10--100 MVA)
+|Fluid |++<++ 10 MVA |27-03-12-03 |Transformer (oil cooled ++<++ 10 MVA)
+|Dry |any MVA |27-03-12-04 |Transformer (cast resin insulation)
+|===
+
+Because the transformer in this case study is *fluid-insulated* and has a *Rated Power of 410 MVA*, it belongs to class *27-03-12-01 “Transformer (oil cooled ++>++ 100 MVA)”*. This classification connects the internally defined engineering properties with an externally governed reference vocabulary and allows interoperability across engineering, procurement, and asset-management systems.
+
+===== Ontology requirement at this stage
+
+*Bearers identified*
+
+* Physical Power Transformer -- the manufactured, uniquely identified asset that will later be tested and delivered.
+* ECLASS Classification Class -- an externally governed product class used for standardized classification (e.g. “Transformer (oil cooled ++>++ 100 MVA)”, IRDI 27-03-12-01).
+* Test Protocol -- the record of measured properties obtained during type or routine tests, linked to the physical transformer via its Serial Number.
+
+*Property assignment*
+
+* Identifying property:
+** Serial Number is assigned to the Physical Power Transformer (unique per manufacturer)
+* Quantitative property:
+** Rated properties (e.g. Rated Power) are assigned to the Physical Power Transformer (e.g. 410 MVA)
+** Configuration properties (e.g. Insulation Type) are assigned to the Physical Power Transformer (++{++ fluid, dry })
+* Classification property:
+** ECLASS Code → Physical Power Transformer (derived from Insulation Type {plus} Rated Power)
+* Reference property:
+** The bearer Test Protocol uses the identifying property Serial Number from the bearer Physical Power Transformer as own identifying property (ensuring 1:1 traceability link)
+
+*Rules identified*
+
+* Each _Physical Power Transformer_ must have exactly one _Serial Number_ assigned by the Manufacturer (1:1) latest at the <<Testing and Acceptance, Factory Acceptance Test>>.
+* Each _Test Protocol_ must reference exactly one _Serial Number_ (1:1).
+* _Rated Power_ and _Insulation Type_ determine exactly one ECLASS class.
+* _Insulation Type = fluid_ and _Rated Power ++>++ 100 MVA_ ⇒ ECLASS 27-03-12-01.
+* _Insulation Type = dry_ ⇒ ECLASS 27-03-12-04.
+* _Rated Power_ is defined in the design phase (see link:#sec-rated-properties[Rated Properties]); _Insulation Type_ is determined by the cooling concept during design.
+
+*Notes*
+
+* Classification schemes like ECLASS provide controlled identifiers; the ontology should store both the code and its human-readable label.
+* The Serial Number is the key traceability element linking manufacturing, testing, logistics, and operation records.
+* The teams mentioned (Manufacturing, Test) represent organizational bearers; their ontology representation follows in <<Organisational and Project Context>>.
+
+=== Testing and Acceptance
+
+After manufacturing and identification, each Physical Power Transformer must demonstrate that it fulfils both the applicable IEC test requirements and the contractual specifications. For this purpose, the Manufacturer performs a *Factory Acceptance Test (FAT)* on every transformer unit before shipment. Depending on the project, the Owner/Operator or an independent inspector may witness these tests. During the FAT, the Test Team carries out a defined set of routine tests (and, if agreed, some special tests) according to IEC 60076-1 and related parts.
+
+Typical examples include:
+
+* winding resistance measurement,
+* ratio and vector-group verification,
+* no-load and load loss measurements,
+* applied and induced voltage tests for insulation,
+* partial discharge checks (where applicable), and
+* noise level and temperature measurements under specified conditions.
+
+Each individual test execution is a *Measurement Activity*. It produces *Measured Properties* such as measured no-load loss, measured short-circuit impedance or measured sound level. These measured values are recorded in one or more *Test Protocols* associated with the transformer's Serial Number (see link:#sec-identification-and-classification[Identification and Classification]). The acceptance decision is derived by comparing the Measured Properties in the Test Protocol with:
+
+* the Rated and Specified Properties (`Rated Power`, `Rated Voltage`, connection designation, cooling method, etc.), and
+* the permissible tolerances and limits defined in IEC 60076-1 and in the contract.
+
+If all measured values remain within the applicable tolerances and no limit is exceeded, the transformer is marked as *accepted for delivery*. If deviations occur, the unit may be rejected, reworked, or accepted with concessions, depending on contractual agreements.
+
+==== Ontology requirement at this stage
+
+*Bearers identified*
+
+* Physical Power Transformer -- the asset being tested and accepted or rejected.
+* Measurement Activity -- each concrete test execution (e.g. “no-load loss measurement at 50 Hz”).
+* Test Protocol -- the structured record of the Measurement Activities and their Measured Properties.
+* Power Transformer Specification / Purchase Order -- the bearer of the requirements against which results are evaluated.
+
+*Property assignment*
+
+* Measured properties (e.g. measured no-load loss, measured impedance, measured sound level) → *Measurement Activity*;
+* Provenance and context (e.g. test date, test temperature, test voltage, test method) → *Measurement Activity* or *Test Protocol*;
+* Traceability link (Serial Number) → *Test Protocol*, referencing the *Physical Power Transformer*;
+* Acceptance status (e.g. accepted, rejected, accepted with concession) → *Physical Power Transformer* or *Purchase Order Item*;
+* Requirement properties (Rated Power, Rated Voltage, Specified Losses, tolerance classes) → *Power Transformer Specification* or *Purchase Order* (already defined in previous chapters).
+
+*Rules identified (making implicit test logic explicit)*
+
+* Each *Measurement Activity* must be associated with exactly one *Test Protocol*.
+* Each *Test Protocol* must be associated with exactly one *Physical Power Transformer* via its Serial Number.
+* Measured Properties must not overwrite Rated or Specified Properties; they are compared against them.
+* Acceptance status is derived from the comparison between Measured Properties and the limits defined in IEC 60076 and the Power Transformer Specification.
+* A transformer may only be shipped to the installation site if its acceptance status is “accepted” (according to the rules of the project).
+
+*Notes*
+
+* Quantitative details (measurement values, uncertainties, units) are handled by Patterns P2 and P5, not by the Property Classes Pattern.
+* Different test types (routine, type, special tests) can be represented as classification properties of the Measurement Activity or Test Protocol.
+* The Test Team and any Witnessing Organisation are organisational bearers; their ontology is described in <<Organisational and Project Context>>.
+
+=== Procurement and Logistics
+
+While the transformer is being designed, manufactured and tested, the commercial side of the project proceeds in parallel. The *Purchase Order* issued by the Owner/Operator (or EPC) defines one or more *Purchase Order Items*, one of which refers to the power transformer used in this case study. Each Purchase Order Item has its own commercial and logistical properties, for example:
+
+* Unit Price and Currency,
+* Required Delivery Date and Agreed Delivery Terms (Incoterms),
+* Supplier and Manufacturer,
+* Project Code and Cost Centre.
+
+These properties qualify the *contractual item*, not the transformer as a physical device. They connect to controlled registers such as currency code lists (e.g. ISO 4217), vendor master data and project management systems. Once the transformer has passed the Factory Acceptance Test, a *Delivery / Shipment Activity* is planned and executed. This activity has additional properties such as:
+
+* Planned Dispatch Date and Actual Dispatch Date,
+* Transport Route and Carrier,
+* Shipment Identifier (e.g. bill-of-lading number),
+* Packaging and transport conditions (e.g. transported filled or without oil).
+
+The Physical Power Transformer remains the same asset throughout, but different bearers carry different properties:
+
+* the *Purchase Order Item* carries commercial and contractual qualities;
+* the *Shipment Activity* carries logistic and temporal qualities;
+* the *Physical Power Transformer* carries technical design and test-related properties.
+
+Keeping these bearers separate prevents the ontology from incorrectly treating commercial attributes (like unit price) as intrinsic properties of the transformer.
+
+==== Ontology requirement at this stage
+
+*Bearers identified*
+
+* Purchase Order -- the contractual agreement between buyer and supplier.
+* Purchase Order Item -- the line item representing the power transformer to be delivered.
+* Physical Power Transformer -- the asset that fulfils the Purchase Order Item.
+* Delivery / Shipment Activity -- the activity representing the physical transport of the transformer.
+* Supplier / Manufacturer Organisation -- organisational bearers referenced from the commercial context.
+
+*Property assignment*
+
+* Commercial and economic properties (Unit Price, Currency, Payment Terms, Project Code) → Purchase Order Item;
+* Temporal and planning properties (Required Delivery Date, Promised Delivery Date) → Purchase Order Item;
+* Logistic properties (Shipment Identifier, Planned Dispatch Date, Actual Dispatch Date, Transport Route) → Delivery / Shipment Activity;
+* Reference properties (Supplier, Manufacturer) → Purchase Order Item or Purchase Order, linking to organisational master data;
+* Technical requirements (link to Power Transformer Specification, ECLASS class) → Purchase Order Item (reference to technical bearers defined earlier).
+
+*Rules identified*
+
+* Each Purchase Order Item referring to a transformer must be linked to exactly one Power Transformer Specification.
+* Each Physical Power Transformer delivered to the project fulfils exactly one Purchase Order Item in this case study.
+* Currency codes and country codes must be taken from governed code systems (e.g. ISO 4217, ISO 3166-1).
+* Economic and logistic properties must not be attached directly to the Physical Power Transformer as if they were technical capabilities.
+
+*Notes*
+
+* Price and cost are context-dependent and may vary between projects for identical transformer types; they are inherently properties of the Purchase Order or commercial context.
+* Shipment and logistics data often appear in ERP or logistics systems; the ontology should reference them rather than duplicating them on the technical asset.
+* Organisational structures (Owner/Operator, Supplier, Carrier) are treated as separate bearers; their ontology is described in <<Organisational and Project Context>>.
+
+=== Installation and Commissioning
+
+After transport, the transformer arrives at the substation site in Germany. An *Installation Activity* covers unloading, positioning on the foundation, assembling accessories, connecting bushings and cooling equipment, and filling with insulating fluid where applicable. During this phase, the transformer transitions from “delivered equipment” to an *operational grid asset*. The grid operator registers the transformer in the asset management system and assigns an *Asset ID*. This Asset ID is an *Identifying Property* distinct from the manufacturer's Serial Number:
+
+* Serial Number -- identifies the unit from the Manufacturer's perspective (production, testing, warranty).
+* Asset ID -- identifies the installed asset from the Owner/Operator's perspective (operation, maintenance, finance).
+
+In addition, the *Country of Installation* and, optionally, the *Substation Identifier* and *Bay / Position* are recorded. Country of Installation is a *Reference Property* based on ISO 3166-1 (e.g. “DE” for Germany). Substation and bay identifiers refer to the operator's own asset-location model. Installation conditions and remarks are captured as descriptive notes, for example:
+
+* “Delivered during severe weather; special transport permit required”,
+* “Final oil filling carried out on site; moisture content verified before energisation”.
+
+These are *Descriptive/Textual Properties* of the Installation Activity or the Asset Record, relevant for later maintenance and audits. A further distinction must be made between *design-time neutral availability* and *installation-time earthing configuration*:
+
+* At design time, the Winding may or may not have a neutral brought out (Neutral Brought Out = true/false).
+* At installation time, the system designer decides whether and how that neutral is *earthed* (for example, solidly earthed, impedance-earthed, or isolated).
+
+Therefore, the ontology separates:
+
+* _Winding.neutralBroughtOut_ → design-time configuration property of the Winding;
+* _Installation.neutralEarthedInThisInstallation_ (or a more detailed earthing method classification) → installation-time property of the Installation or system configuration for this particular substation.
+
+==== Ontology requirement at this stage
+
+*Bearers identified*
+
+* Physical Power Transformer -- the delivered and installed asset.
+* Asset Record -- the Owner/Operator's representation of the asset in the asset management system.
+* Installation Activity -- the activity that installs and configures the transformer in the substation.
+* Location / Site / Substation -- the geographical and system location of the installation.
+
+*Property assignment*
+
+* Identifying property: _Asset ID_ → Asset Record (and, by reference, to the Physical Power Transformer);
+* Reference property: _Country of Installation_ (ISO 3166-1 code) → Asset Record or Location;
+* Reference / classification properties: _Substation Identifier_, _Bay / Position_ → Asset Record or Location;
+* Configuration property (installation-time): _neutralEarthedInThisInstallation_ (or earthing method classification) → Installation Activity or system configuration bearer;
+* Descriptive/textual properties (Installation Notes) → Installation Activity or Asset Record.
+
+*Rules identified*
+
+* Each Physical Power Transformer installed in the grid must have exactly one Asset ID in the Owner/Operator's asset register.
+* The same Physical Power Transformer can be reassigned to a new Location over its life, but at any given time it has exactly one current Location.
+* _Winding.neutralBroughtOut_ (design-time) does not imply how the neutral is earthed in the system; the earthing configuration must be modelled separately for the Installation.
+* Country codes must be taken from ISO 3166-1; Asset IDs must be unique within the asset management context.
+
+*Notes*
+
+* The distinction between Serial Number and Asset ID is crucial: they refer to the same physical thing but are issued by different organisations for different purposes.
+* Installation-related data often resides in EAM (Enterprise Asset Management) or GIS systems; the ontology should federate with these systems rather than duplicating them.
+* Earthing methods may reference further standards (e.g. IEC 61936-1); their detailed modelling is beyond the scope of this case study.
+
+=== Operation
+
+Once commissioned, the transformer enters normal operation in the substation. From an ontological perspective, its behaviour in the grid is best described through one or more *Operation Activities* or *Operational Scenarios*. The system operator defines an Operation Activity that describes the planned usage of the transformer under normal conditions. For this scenario, a *Nominal Load* (e.g. 350 MVA) is assigned as a *Nominal Property* of the Operation Activity -- _not_ of the transformer itself.This reflects the IEC-based distinction:
+
+* *Rated Power* -- a qualifying design property of the transformer type (device capability).
+* *Nominal Power / Nominal Load* -- a planning property of the operational scenario (intended usage).
+
+Formally, the ontology expresses this as:
+
+PowerTransferActivity.nominalPower
+
+* type: quantitative property
+* domain: Activity (Operation Scenario / Service)
+* semantics: planned or scheduled loading of the transformer in this specific system context.
+
+Two identical transformers (same Rated Power, same design) can be operated with very different nominalPower values depending on system planning, redundancy margins, ambient conditions, or market constraints. Conversely, the _same_ Physical Power Transformer can participate in multiple Operation Activities over its lifetime (for example, normal operation, emergency overload operation, or temporary reconfiguration), each with its own nominalPower. During operation, the transformer is monitored continuously or periodically.
+
+*Monitoring Activities* produce *Measured Properties* such as:
+
+* actual load (MVA or current),
+* top-oil and winding temperatures,
+* measured efficiency or losses,
+* number of tap changes,
+* alarm and event counts.
+
+These Measured Properties belong to the Monitoring Activities and to their associated Measurement Records, not to the class definition of the transformer. Maintenance notes (e.g. “unusual noise observed under high load”, “fan failure replaced”) are captured as *Descriptive/Textual Properties* of Maintenance Activities or the Asset Record.
+
+==== Ontology requirement at this stage
+
+*Bearers identified*
+
+* Operation Activity / Power Transfer Activity -- describes how the transformer is used in the grid.
+* Physical Power Transformer -- provides the capability used by the Operation Activity.
+* Monitoring Activity / Measurement Activity -- produces Measured Properties during operation.
+* Maintenance Activity -- activities that preserve or restore the transformer's condition.
+
+*Property assignment*
+
+* Nominal properties (e.g. _nominalPower_, possibly _nominalVoltage_, _nominalLoadFactor_) → Operation Activity / Power Transfer Activity;
+* Measured operational properties (e.g. measured load, temperature, efficiency) → Monitoring / Measurement Activities;
+* Configuration properties (e.g. Voltage Conversion Role, Phase Displacement Group) → Transformer Type / Power Transformer Specification (defined earlier, reused here as context);
+* Descriptive/textual properties (maintenance notes, anomaly descriptions) → Maintenance Activity or Asset Record.
+
+*Rules identified*
+
+* Rated properties describe device capability; nominal properties describe intended usage; these must not be conflated in the ontology.
+* A single Physical Power Transformer may participate in multiple Operation Activities, each with its own nominalPower and constraints.
+* Measured operational properties must not overwrite Rated or Nominal Properties; they are time-stamped observations attached to Monitoring Activities.
+* Maintenance activities may change the condition or configuration of the transformer but do not retroactively change historical Measured Properties.
+
+*Notes*
+
+* Time-series load and temperature profiles are best handled via specialised telemetry or historian systems; the ontology should reference them via Measurement or Monitoring Activities.
+* The separation of capability (rated), plan (nominal), realisation (measured) and intervention (maintenance) is central to avoiding hidden semantics in a single overloaded property like “power”.
+
+== Organisational and Project Context
+
+The previous sections described the technical lifecycle of the power transformer. In parallel, three main organisations run their own projects: the Owner/Operator, the EPC Contractor, and the Manufacturer. All three must coordinate their work so that the transformer is designed, built, delivered, installed and commissioned at the right time. The key technical--organisational linkage in this case study is the *Delivery Date* defined in the _Purchase Order Item_ (see link:#sec-design-and-specification-phase[Design and Specification] and link:#sec-procurement-and-logistics[Procurement and Logistics]).
+
+=== Delivery Date as a shared planning anchor
+
+When the Purchase Order for the transformer is placed, the Purchase Order Item contains a *Required Delivery Date* -- for example "31 March 2027". Initially this date is a _specified property_ of the Purchase Order Item. Once agreed by all parties, it becomes the *anchor point* for several project-specific milestones:
+
+* The *Manufacturer* derives internal dates such as:
+** _Design Freeze Date_ (latest date to change the Power Transformer Specification),
+** _Planned FAT Date_ (Factory Acceptance Test before shipment),
+** _Planned Shipment Date_ (so that the transformer arrives by the contractual Delivery Date).
+* The *EPC Contractor* derives dates such as:
+** _Foundation Ready Date_ (civil works completed before delivery),
+** _Installation Start Date_ (crane and teams booked after delivery),
+** _Planned Commissioning Date_ (transformer energised and handed over).
+* The *Owner/Operator* derives dates such as:
+** an _Outage Window_ for energisation,
+** an _Approval Meeting Date_ to formally accept commissioning and start operation.
+
+All these dates appear in different project schedules, but semantically they are *Milestones* -- that is, Events with a planned or actual date, participants and related technical bearers (such as the Specification, the Physical Power Transformer or the Asset Record).
+
+==== Ontology requirement at this stage
+
+See link:#sec-information-exchange-at-milestones[Information exchange at milestones].
+
+=== Milestones as events across technical phases
+
+Many of these milestones have already implicitly appeared in the narrative of #11.1.x#:
+
+[width="100%",cols="23%,34%,43%",options="header",]
+|===
+|Milestone Event |Where it appears in the lifecycle story |Typical related bearers
+|*Specification Freeze* |#11.1.1# -- Design and Specification Phase |Power Transformer Specification, Purchase Order Item
+|*FAT Completed* |11.1.3 -- Testing and Acceptance |Test Protocol, Physical Power Transformer
+|*Delivery Confirmed* |11.1.4 -- Procurement and Logistics |Physical Power Transformer, Shipment Activity
+|*Installation Completed* |11.1.5 -- Installation and Commissioning |Installation Activity, Asset Record
+|*Commissioning Approved* |11.1.5 -- Installation and Commissioning |Asset Record, Operation-ready status
+|===
+
+For each of these milestones, at least two organisations are involved. For example:
+
+* *FAT Completed* -- Manufacturer performs the tests, EPC and/or Owner may witness and approve the Test Protocol.
+* *Delivery Confirmed* -- Manufacturer hands over the transformer to the EPC at the agreed Delivery Date; logistics documentation confirms this Event.
+* *Commissioning Approved* -- EPC reports successful energisation; the Owner/Operator accepts the transformer as an operational asset.
+
+The *Required Delivery Date* thus drives the timing of these Milestones: each organisation works backwards and forwards from this date to align its own activities with the others.
+
+==== Ontology requirement at this stage
+
+See link:#sec-information-exchange-at-milestones[Information exchange at milestones].
+
+=== Information exchange at milestones
+
+Whenever a milestone occurs, at least one *Information Exchange* takes place between organisations, typically in the form of structured documents or datasets:
+
+* At *Specification Freeze*, the Manufacturer receives the final Power Transformer Specification from the EPC/Owner.
+* After *FAT Completed*, the Manufacturer sends the signed Test Protocol to EPC and Owner.
+* At *Delivery Confirmed*, shipping documents and a packing list are sent from Manufacturer to EPC/Owner.
+* At *Commissioning Approved*, the EPC sends a commissioning report and updated Asset Data to the Owner/Operator.
+
+Each of these exchanges can be seen as an *Information Exchange Activity* associated with a Milestone Event, with at least one sender, one receiver and one or more technical bearers (Specification, Test Protocol, Asset Record, etc.) as content.
+
+==== Ontology requirement at this stage
+
+*Bearers identified*
+
+* Organisation -- e.g. Owner/Operator, EPC Contractor, Manufacturer.
+* Purchase Order Item -- includes the _Required Delivery Date_ as a specified temporal property.
+* Project Milestone Event -- e.g. Specification Freeze, FAT Completed, Delivery Confirmed, Installation Completed, Commissioning Approved.
+* Information Exchange Activity -- the exchange of specifications, test reports or logistics documents at milestones.
+
+*Property assignment*
+
+* specified temporal property: _Required Delivery Date_ → Purchase Order Item;
+* temporal properties: _Planned Date_, _Actual Date_ → Project Milestone Event;
+* relational properties: _participatesIn_, _responsibleFor_ → between Organisation and Project Milestone Event;
+* reference properties: _relatesToBearer_ (e.g. Specification, Test Protocol, Physical Power Transformer, Asset Record) → Project Milestone Event;
+* descriptive/textual properties (e.g. comments, document references) → Information Exchange Activity.
+
+*Rules identified*
+
+* Each Project Milestone Event involves at least one Organisation and at least one related technical Bearer.
+* The _Required Delivery Date_ from the Purchase Order Item must be consistent with the _Planned_ or _Actual Date_ of the Delivery Confirmed Event.
+* Milestone dates follow the lifecycle order: Specification Freeze ++<++ FAT Completed ++<++ Delivery Confirmed ++<++ Installation Completed ++<++ Commissioning Approved.
+* Each Information Exchange Activity has at least one sender and one receiver Organisation and is linked to exactly one Milestone Event.
+
+*Notes*
+
+* This organisational view is deliberately minimal: it only introduces enough structure to show how technical bearers and properties are coordinated across organisations and time.
+* Detailed modelling of project management, roles and workflows is handled elsewhere; the case study simply demonstrates that the ontology can host Organisations, Events and Information Exchanges as additional bearers.
+
+== Accounting and Financial Events
+
+The lifecycle of the power transformer also has a financial dimension. While technical and organizational events mark physical progress, each such milestone often has a corresponding financial event — typically the issue or receipt of an invoice linked to a contractual payment schedule or an internal financial transaction event such as the recording of working hours and the regular payment of project staff across the different teams including the monthly payment of the employees. Note: The internal financial transactions are mentioned only to indicate how far the example could extend, but they are not included in the case study itself.
+
+=== From Technical to Financial Event
+
+The Purchase Order Item that defines the transformer's Delivery Date also defines the Payment Schedule, usually expressed as percentages of the total contract value linked to technical milestones. A simplified example for this case study:
+
+[width="100%",cols="22%,32%,20%,26%",options="header",]
+|===
+|Milestone Event |Technical Description |Payment Share |Typical Evidence
+|Design Approval |Specification Freeze approved |10 % |signed specification
+|FAT Completed |Factory Acceptance Test passed |60 % |accepted test protocol
+|Delivery Confirmed |Transformer shipped |20 % |delivery note
+|Commissioning +
+Approved |Installation completed |10 % |commissioning report
+|===
+
+When the FAT Completed event occurs, the Manufacturer's accounting system automatically triggers an Invoice Event corresponding to that milestone. The invoice amount, currency, due date, and payment status are financial properties of this event, derived from the contract and recorded against the Purchase Order Item.
+
+==== Ontology requirement at this stage
+
+See link:#sec-integration-of-technical-and-financial-perspectives[Integration of Technical and Financial Perspectives].
+
+=== Example: FAT as Financial Trigger
+
+In our case study, once the transformer passes its Factory Acceptance Test, the EPC or Owner's representative signs the Test Protocol. This signed document acts as the technical evidence that the FAT milestone has been achieved. Immediately afterwards, the Manufacturer issues an invoice for 60 % of the contract amount — for instance:
+
+[width="100%",cols="20%,40%,40%",options="header",]
+|===
+|Property |Example Value |Bearer
+|Invoice ID |INV-2027-031 |Financial Document
+|Invoice Amount |2 520 000 EUR |Invoice Event
+|Currency |EUR |Invoice Event
+|Payment Due Date |30 days after FAT approval |Invoice Event
+|Linked Milestone |FAT Completed |Event reference
+|Related Purchase Order Item |PO-001-TRF-220/110 kV |Contract reference
+|===
+
+Once the Owner/Operator confirms receipt and accepts the FAT results, the payment process is released — completing the financial closure for that stage.
+
+==== Ontology requirement at this stage
+
+See link:#sec-integration-of-technical-and-financial-perspectives[Integration of Technical and Financial Perspectives].
+
+===  Integration of Technical and Financial Perspectives
+
+This example shows how technical progress and financial execution are synchronised through shared Events. From an ontology perspective:
+
+* The Invoice Event is a specialised form of Event — same temporal structure, but with financial semantics.
+* It is triggered by a technical milestone (e.g. FAT Completed).
+* It refers to both the Purchase Order Item (commercial bearer) and the Organisation issuing or receiving the payment.
+* It aggregates financial properties such as amount, currency, payment terms, and status.
+
+This establishes a bridge between engineering and accounting domains without mixing their semantics.
+
+==== Ontology requirement at this stage
+
+*Bearers identified*
+
+* Purchase Order Item -- commercial artefact defining total contract value and payment schedule.
+* Project Milestone Event -- technical event that triggers an accounting transaction.
+* Invoice Event -- financial event representing an issued or received invoice.
+* Financial Document -- the invoice itself as an information artefact.
+* Organisation -- Manufacturer (issuer) and Owner/EPC (recipient).
+
+*Property assignment*
+
+* quantitative property: Invoice Amount → Invoice Event;
+* reference property: Currency Code → Invoice Event;
+* temporal property: Payment Due Date → Invoice Event;
+* relational property: triggeredBy → between Invoice Event and the related Project Milestone Event;
+* identifying property: Invoice ID → Financial Document;
+* reference property: refersToPurchaseOrderItem → Invoice Event → Purchase Order Item.
+
+*Rules identified*
+
+* Each Invoice Event must be triggered by exactly one technical Milestone Event.
+* Each Invoice Event must reference one Purchase Order Item and involve at least two Organisations (issuer and recipient).
+* Payment Due Date must be later than or equal to the Event Date of the triggering milestone.
+* Invoice Amount ≤ Contract Value × Payment Share defined in the Purchase Order Item.
+
+*Notes*
+
+* This case study uses the FAT milestone as an example of how accounting activities can be represented as events in the same temporal framework as technical ones.
+* The ontology does not model accounting systems or financial ledgers; it only ensures that lifecycle data can link commercial and technical artefacts in a traceable way.
+* Similar financial events could be derived for other milestones, but one example (FAT) suffices to demonstrate the principle.
