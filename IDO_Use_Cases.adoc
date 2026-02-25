@@ -2,4 +2,5 @@
 :sectnums:
 
 include::IDO_Use_Case_PowerTransformer.adoc[leveloffset=+1]
+
 <<<
