@@ -43,7 +43,7 @@ To provide a clear visual foundation for the Power Transformer case study, the f
 Stacking of laminated steel sheets to form the magnetic core of a three-phase power transformer is shown in xref:fig-power-transformer-winding[]. The core limbs will later carry the windings and provide the magnetic path that links the three phase systems.
 
 //.Stacking of laminated steel sheets to form the magnetic core of a three-phase power transformer
-[#fig-power-transformer-winding, title="Stacking of laminated steel sheets to form the magnetic core of a three-phase power transformer. Author: Fluppe37. Public Domain, CC BY-SA 3.0 via Wikimedia Commons",link=https://commons.wikimedia.org/wiki/File:Kern_722.jpg]
+[#fig-power-transformer-winding, title="Stacking of laminated steel sheets to form the magnetic core of a three-phase power transformer. Author: Fluppe37. Public Domain, CC BY-SA 3.0 via Wikimedia Commons<br>",link=https://commons.wikimedia.org/wiki/File:Kern_722.jpg]
 image::PowerTransformer_Winding_TapChanger.jpg[]
 
 
