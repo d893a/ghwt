@@ -46,6 +46,7 @@ Stacking of laminated steel sheets to form the magnetic core of a three-phase po
 [#fig-power-transformer-winding, title="Stacking of laminated steel sheets to form the magnetic core of a three-phase power transformer. Author: Fluppe37. Public Domain, CC BY-SA 3.0 via Wikimedia Commons",link=https://commons.wikimedia.org/wiki/File:Kern_722.jpg]
 image::PowerTransformer_Winding_TapChanger.jpg[]
 
+
 This view shows the beginning of the Power Transformer's physical lifecycle. The three horizontally positioned core limbs, each carrying one phase of the high- and low-voltage windings, form the magnetic structure that will later determine the Rated Power and Rated Voltage of the Power Transformer.
 
 === Winding assembly on the magnetic core
